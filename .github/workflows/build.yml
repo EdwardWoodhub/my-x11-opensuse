@@ -44,12 +44,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 动态计算镜像 Tag，并将仓库路径转为全小写 (兼容 OCI 命名规范)
+      # 动态计算镜像 Tag 与包名（统一转换为小写）
       - name: Compute Image Tag & Version
         id: vars
         run: |
-          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "image_name=${REPO_LOWER}/opensuse-desktop" >> $GITHUB_OUTPUT
+          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "image_name=${REPO_OWNER}/my-x11-opensuse-vm" >> $GITHUB_OUTPUT
 
           if [ "${{ github.event_name }}" = "schedule" ]; then
             echo "tag=daily-$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
@@ -70,11 +70,11 @@ jobs:
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:${{ steps.vars.outputs.tag }}
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:latest
 
-      # 步骤 2：打包成 LiveCD ISO
+      # 步骤 2：打包成 LiveCD ISO（使用刚刚构建好的镜像自带的打包工具）
       - name: Generate LiveCD ISO
         run: |
           docker run --rm -v $(pwd):/workspace -w /workspace --privileged \
-            ghcr.io/rancher/elemental-toolkit/elemental-toolkit:latest \
+            ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:${{ steps.vars.outputs.tag }} \
             elemental build-iso \
             --system-image ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:${{ steps.vars.outputs.tag }} \
             -o opensuse16-desktop-live.iso
