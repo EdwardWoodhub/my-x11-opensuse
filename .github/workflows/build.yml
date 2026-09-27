@@ -70,14 +70,17 @@ jobs:
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:${{ steps.vars.outputs.tag }}
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:latest
 
-      # 步骤 2：打包成 LiveCD ISO（使用刚刚构建好的镜像自带的打包工具）
+      # 步骤 2：打包成 LiveCD ISO
       - name: Generate LiveCD ISO
         run: |
           docker run --rm -v $(pwd):/workspace -w /workspace --privileged \
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:${{ steps.vars.outputs.tag }} \
             elemental build-iso \
-            --system-image ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:${{ steps.vars.outputs.tag }} \
-            -o opensuse16-desktop-live.iso
+            ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:${{ steps.vars.outputs.tag }} \
+            -o . \
+            -n my-x11-opensuse-vm
+            
+      
 
       # 步骤 3：发布 ISO（仅在定时构建、手动勾选发布时执行）
       - name: Publish ISO to GitHub Releases
