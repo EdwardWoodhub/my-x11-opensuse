@@ -82,14 +82,17 @@ jobs:
             
       
 
-      # 步骤 3：发布 ISO（仅在定时构建、手动勾选发布时执行）
+      # 步骤 3：发布 ISO
       - name: Publish ISO to GitHub Releases
         uses: softprops/action-gh-release@v2
         if: |
+          github.event_name == 'push' ||
           github.event_name == 'schedule' ||
           (github.event_name == 'workflow_dispatch' && inputs.release_iso == true)
         with:
-          files: opensuse16-desktop-live.iso
+          files: my-x11-opensuse-vm.iso
           tag_name: ${{ steps.vars.outputs.tag }}
           name: "Build ${{ steps.vars.outputs.tag }}"
           generate_release_notes: true
+          
+      
