@@ -18,10 +18,13 @@ RUN zypper --non-interactive --gpg-auto-import-keys refresh && \
     zypper clean -a
 
 # 4. 创建测试用户并开启免密 sudo 权限
-RUN useradd -m -G wheel -s /bin/bash liveuser && \
+RUN groupadd -f wheel && \
+    useradd -m -G wheel -s /bin/bash liveuser && \
     echo "liveuser:liveuser" | chpasswd && \
     echo "root:root" | chpasswd && \
     echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+
 
 # 5. 配置 LightDM 开机自动免密登录 liveuser 进入 XFCE
 RUN mkdir -p /etc/lightdm/lightdm.conf.d && \
