@@ -17,12 +17,30 @@ RUN zypper --non-interactive --gpg-auto-import-keys refresh && \
         xfwm4 && \
     zypper clean -a
 
-# 4. 创建测试用户并开启免密 sudo 权限
+# ------------------------------
+# 4a. 基础用户与系统权限配置
+# ------------------------------
 RUN groupadd -f wheel && \
+    # 创建 liveuser 默认用户
     useradd -m -G wheel -s /bin/bash liveuser && \
     echo "liveuser:liveuser" | chpasswd && \
+    # 新增 peter 用户（加入 wheel 管理组，拥有 sudo 权限，默认密码设为 peter）
+    useradd -m -G wheel -s /bin/bash peter && \
+    echo "peter:peter" | chpasswd && \
+    # 设置 root 密码及免密 sudo
     echo "root:root" | chpasswd && \
     echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# ------------------------------
+# 4b. 固化 sudo 安全路径
+# ------------------------------
+RUN echo 'Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"' >> /etc/sudoers
+
+# ------------------------------
+# 4c. 固化 Recovery 分区大小为 8GB
+# ------------------------------
+RUN mkdir -p /etc/elemental && \
+    printf 'install:\n  partitions:\n    recovery:\n      size: 8192\n' > /etc/elemental/config.yaml
 
 
 
