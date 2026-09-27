@@ -1,0 +1,31 @@
+# 1. 构建输出产物（防止大体积系统镜像误提交）
+*.iso
+*.raw
+*.qcow2
+*.vmdk
+*.img
+*.tar
+*.tar.gz
+
+# 2. 本地测试与打包产生的挂载点或临时目录
+/build/
+/dist/
+/workspace/
+/tmp/
+
+# 3. 敏感配置与本地凭据（千万不要推到仓库）
+*.key
+*.pem
+*.pub
+*.env
+*.env.local
+cloud-config.yaml
+elemental-registration.yaml
+
+# 4. 编辑器与操作系统产生的文件
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
