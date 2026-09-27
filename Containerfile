@@ -42,7 +42,15 @@ RUN echo 'Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bi
 RUN mkdir -p /etc/elemental && \
     printf 'install:\n  partitions:\n    recovery:\n      size: 8192\n' > /etc/elemental/config.yaml
 
-
+# -------------------------------------------------------------
+# 4d. 禁用 Elemental/Rancher 边缘注册与自杀式健康评估服务（单机桌面无需使用）
+# -------------------------------------------------------------
+RUN systemctl mask elemental-system-agent.service \
+                   elemental-boot-assessment.service \
+                   elemental-register.service \
+                   elemental-register.timer \
+                   rebootmgr.service \
+                   NetworkManager-wait-online.service
 
 # 5. 配置 LightDM 开机自动免密登录 liveuser 进入 XFCE
 RUN mkdir -p /etc/lightdm/lightdm.conf.d && \
