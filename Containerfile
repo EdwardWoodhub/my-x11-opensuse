@@ -30,6 +30,9 @@ RUN groupadd -f wheel && \
 RUN mkdir -p /etc/lightdm/lightdm.conf.d && \
     printf "[Seat:*]\nautologin-user=liveuser\nautologin-user-timeout=0\nuser-session=xfce\n" > /etc/lightdm/lightdm.conf.d/50-autologin.conf
 
-# 6. 设置默认启动级别为图形界面，并开启 LightDM
+# 6. 设置默认启动级别为图形界面，并强制接管显示管理器服务
 RUN systemctl set-default graphical.target && \
-    systemctl enable lightdm.service
+    systemctl enable --force lightdm.service
+
+
+
