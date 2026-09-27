@@ -26,7 +26,6 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/opensuse-desktop
 
 jobs:
   build-and-release:
@@ -45,10 +44,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 动态计算镜像 Tag：如果是定时构建加 daily- 前缀，普通提交用短 sha
+      # 动态计算镜像 Tag，并将仓库路径转为全小写 (兼容 OCI 命名规范)
       - name: Compute Image Tag & Version
         id: vars
         run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "image_name=${REPO_LOWER}/opensuse-desktop" >> $GITHUB_OUTPUT
+
           if [ "${{ github.event_name }}" = "schedule" ]; then
             echo "tag=daily-$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -65,8 +67,8 @@ jobs:
           file: ./Containerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:${{ steps.vars.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:latest
 
       # 步骤 2：打包成 LiveCD ISO
       - name: Generate LiveCD ISO
@@ -74,10 +76,10 @@ jobs:
           docker run --rm -v $(pwd):/workspace -w /workspace --privileged \
             ghcr.io/rancher/elemental-toolkit/elemental-toolkit:latest \
             elemental build-iso \
-            --system-image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag }} \
+            --system-image ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:${{ steps.vars.outputs.tag }} \
             -o opensuse16-desktop-live.iso
 
-      # 步骤 3：发布 ISO（仅在定时构建、手动勾选发布，或推 Tag 时执行）
+      # 步骤 3：发布 ISO（仅在定时构建、手动勾选发布时执行）
       - name: Publish ISO to GitHub Releases
         uses: softprops/action-gh-release@v2
         if: |
