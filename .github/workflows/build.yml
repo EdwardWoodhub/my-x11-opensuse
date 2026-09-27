@@ -79,10 +79,14 @@ jobs:
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:${{ steps.vars.outputs.tag }} \
             -o . \
             -n my-x11-opensuse-vm
-            
-      
 
-      # 步骤 3：发布 ISO
+      # 步骤 2.5：将大于 2GB 的 ISO 切割为多个 1.5GB 的文件
+      - name: Split ISO
+        run: |
+          split -b 1500M my-x11-opensuse-vm.iso my-x11-opensuse-vm.iso.part-
+          # 这会生成 my-x11-opensuse-vm.iso.part-aa, part-ab 等文件
+
+      # 步骤 3：发布切割后的 ISO 分卷
       - name: Publish ISO to GitHub Releases
         uses: softprops/action-gh-release@v2
         if: |
@@ -90,7 +94,7 @@ jobs:
           github.event_name == 'schedule' ||
           (github.event_name == 'workflow_dispatch' && inputs.release_iso == true)
         with:
-          files: my-x11-opensuse-vm.iso
+          files: my-x11-opensuse-vm.iso.part-*
           tag_name: ${{ steps.vars.outputs.tag }}
           name: "Build ${{ steps.vars.outputs.tag }}"
           generate_release_notes: true
