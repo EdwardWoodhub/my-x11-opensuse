@@ -26,6 +26,9 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
+  IMAGE_NAME: my-x11-opensuse-vm
+  ACTOR_LOWER: edwardwoodhub
+
 
 jobs:
   build-and-release:
