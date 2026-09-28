@@ -14,6 +14,13 @@ RUN zypper --non-interactive --gpg-auto-import-keys refresh && \
         xorg-x11-server \
         xfce4-terminal \
         xfce4-session \
+        open-vm-tools \
+        open-vm-tools-desktop \
+        xf86-video-vmware \
+        xf86-input-vmmouse \
+        fastfetch \
+        btop \
+        htop \
         xfwm4 && \
     zypper clean -a
 
@@ -70,5 +77,6 @@ RUN mkdir -p /etc/lightdm/lightdm.conf.d && \
 RUN systemctl set-default graphical.target && \
     systemctl enable --force lightdm.service
 
-
+# 7. 确保 vmtoolsd 服务开机自启
+RUN systemctl enable vmtoolsd.service
 
