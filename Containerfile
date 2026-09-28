@@ -54,7 +54,16 @@ RUN mkdir -p /etc/systemd/system && \
     ln -sf /dev/null /etc/systemd/system/elemental-register.service && \
     ln -sf /dev/null /etc/systemd/system/elemental-register.timer && \
     ln -sf /dev/null /etc/systemd/system/rebootmgr.service && \
-    ln -sf /dev/null /etc/systemd/system/NetworkManager-wait-online.service
+    ln -sf /dev/null /etc/systemd/system/NetworkManager-wait-online.service && \
+    ln -sf /dev/null /etc/systemd/system/plymouth-quit-wait.service && \
+    ln -sf /dev/null /etc/systemd/system/plymouth-start.service
+
+# 2. 从源头直接卸载 plymouth（防止它打包进 initramfs 从早期阶段卡死）
+RUN zypper rm -y --clean-deps plymouth plymouth-scripts || true
+
+# 3. 固化内核引导参数（双重保险，告知内核绝不拉起开机动画）
+RUN mkdir -p /etc/elemental/config.d && \
+    echo 'extra_cmdline: "plymouth.enable=0"' > /etc/elemental/config.d/cmdline.yaml
 
 # 2. 彻底掐死 systemd 内核与硬件看门狗超时（防止硬件强行重启）
 RUN mkdir -p /etc/systemd/system.conf.d && \
