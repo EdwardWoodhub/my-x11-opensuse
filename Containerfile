@@ -24,9 +24,6 @@ RUN groupadd -f wheel && \
     # 创建 liveuser 默认用户
     useradd -m -G wheel -s /bin/bash liveuser && \
     echo "liveuser:liveuser" | chpasswd && \
-    # 新增 peter 用户（加入 wheel 管理组，拥有 sudo 权限，默认密码设为 peter）
-    useradd -m -G wheel -s /bin/bash peter && \
-    echo "peter:peter" | chpasswd && \
     # 设置 root 密码及免密 sudo
     echo "root:root" | chpasswd && \
     echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
@@ -42,15 +39,28 @@ RUN echo 'Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bi
 RUN mkdir -p /etc/elemental && \
     printf 'install:\n  partitions:\n    recovery:\n      size: 8192\n' > /etc/elemental/config.yaml
 
-# -------------------------------------------------------------
-# 4d. 禁用 Elemental/Rancher 边缘注册与自杀式健康评估服务（单机桌面无需使用）
-# -------------------------------------------------------------
-RUN systemctl mask elemental-system-agent.service \
-                   elemental-boot-assessment.service \
-                   elemental-register.service \
-                   elemental-register.timer \
-                   rebootmgr.service \
-                   NetworkManager-wait-online.service
+# 1. 彻底屏蔽所有云边注册、自杀评估、自动重启以及网络阻断单元
+RUN mkdir -p /etc/systemd/system && \
+    ln -sf /dev/null /etc/systemd/system/elemental-system-agent.service && \
+    ln -sf /dev/null /etc/systemd/system/elemental-boot-assessment.service && \
+    ln -sf /dev/null /etc/systemd/system/elemental-boot-assessment.timer && \
+    ln -sf /dev/null /etc/systemd/system/elemental-register.service && \
+    ln -sf /dev/null /etc/systemd/system/elemental-register.timer && \
+    ln -sf /dev/null /etc/systemd/system/rebootmgr.service && \
+    ln -sf /dev/null /etc/systemd/system/NetworkManager-wait-online.service
+
+# 2. 彻底掐死 systemd 内核与硬件看门狗超时（防止硬件强行重启）
+RUN mkdir -p /etc/systemd/system.conf.d && \
+    printf '[Manager]\nRuntimeWatchdogSec=0\nRebootWatchdogSec=0\nKExecWatchdogSec=0\n' > /etc/systemd/system.conf.d/disable-watchdogs.conf
+
+# 3. 固化 peter 用户、免密 sudo 与全局 secure_path 环境变量
+RUN useradd -m -G wheel -s /bin/bash peter && \
+    echo "peter:peter" | chpasswd && \
+    mkdir -p /etc/sudoers.d && \
+    echo 'peter ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/peter && \
+    chmod 0440 /etc/sudoers.d/peter && \
+    echo 'Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"' >> /etc/sudoers
+
 
 # 5. 配置 LightDM 开机自动免密登录 liveuser 进入 XFCE
 RUN mkdir -p /etc/lightdm/lightdm.conf.d && \
