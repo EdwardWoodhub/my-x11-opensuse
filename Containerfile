@@ -8,7 +8,10 @@ RUN zypper --non-interactive ar -cfp 90 https://download.opensuse.org/distributi
 # 3. 导入 GPG 密钥并安装 XFCE 桌面环境与 LightDM
 RUN zypper --non-interactive --gpg-auto-import-keys refresh && \
     zypper --non-interactive in \
+        btop \
+        gedit \
         patterns-xfce-xfce \
+        pluma \
         lightdm \
         lightdm-gtk-greeter \
         xorg-x11-server \
@@ -19,7 +22,6 @@ RUN zypper --non-interactive --gpg-auto-import-keys refresh && \
         xf86-video-vmware \
         xf86-input-vmmouse \
         fastfetch \
-        btop \
         htop \
         xfwm4 && \
     zypper clean -a
@@ -84,9 +86,16 @@ RUN useradd -m -G wheel -s /bin/bash peter && \
 RUN mkdir -p /etc/lightdm/lightdm.conf.d && \
     printf "[Seat:*]\nautologin-user=liveuser\nautologin-user-timeout=0\nuser-session=xfce\n" > /etc/lightdm/lightdm.conf.d/50-autologin.conf
 
-# 6. 设置默认启动级别为图形界面，并强制接管显示管理器服务
+# 1. 显式指定 openSUSE 的默认显示管理器为 lightdm
+RUN mkdir -p /etc/sysconfig && \
+    echo 'DISPLAYMANAGER="lightdm"' > /etc/sysconfig/displaymanager
+
+# 2. 强行建立 display-manager 和 graphical.target 软链接
 RUN systemctl set-default graphical.target && \
-    systemctl enable --force lightdm.service
+    mkdir -p /etc/systemd/system/graphical.target.wants && \
+    ln -sf /usr/lib/systemd/system/lightdm.service /etc/systemd/system/display-manager.service && \
+    ln -sf /usr/lib/systemd/system/lightdm.service /etc/systemd/system/graphical.target.wants/lightdm.service
+
 
 # 7. 确保 vmtoolsd 服务开机自启
 RUN systemctl enable vmtoolsd.service
