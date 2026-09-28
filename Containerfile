@@ -2,27 +2,29 @@
 FROM registry.suse.com/suse/sl-micro/6.2/baremetal-os-container:latest
 
 # 2. 添加 openSUSE 官方标准仓库（包含 XFCE 与图形界面套件）
-RUN zypper --non-interactive ar -cfp 90 https://download.opensuse.org/distribution/leap/16.0/repo/oss/ oss && \
-    zypper --non-interactive ar -cfp 90 https://download.opensuse.org/update/leap/16.0/oss/ update-oss || true
+RUN zypper --non-interactive ar -cfp 90 https://download.opensuse.org/distribution/leap/16.0/repo/oss/ oss || true && \
+    zypper --non-interactive ar -cfp 90 https://download.opensuse.org/distribution/leap/16.0/repo/non-oss/ non-oss || true 
 
 # 3. 导入 GPG 密钥并安装 XFCE 桌面环境与 LightDM
 RUN zypper --non-interactive --gpg-auto-import-keys refresh && \
     zypper --non-interactive in \
         btop \
+        fastfetch \
         gedit \
-        patterns-xfce-xfce \
-        pluma \
+        htop \
         lightdm \
         lightdm-gtk-greeter \
+        meld \
+        open-vm-tools \
+        open-vm-tools-desktop \
+        patterns-xfce-xfce \
+        pluma \
+        syncthing \
         xorg-x11-server \
         xfce4-terminal \
         xfce4-session \
-        open-vm-tools \
-        open-vm-tools-desktop \
         xf86-video-vmware \
         xf86-input-vmmouse \
-        fastfetch \
-        htop \
         xfwm4 && \
     zypper clean -a
 
@@ -83,8 +85,8 @@ RUN useradd -m -G wheel -s /bin/bash peter && \
 
 
 # 5. 配置 LightDM 开机自动免密登录 liveuser 进入 XFCE
-RUN mkdir -p /etc/lightdm/lightdm.conf.d && \
-    printf "[Seat:*]\nautologin-user=liveuser\nautologin-user-timeout=0\nuser-session=xfce\n" > /etc/lightdm/lightdm.conf.d/50-autologin.conf
+#RUN mkdir -p /etc/lightdm/lightdm.conf.d && \
+#    printf "[Seat:*]\nautologin-user=liveuser\nautologin-user-timeout=0\nuser-session=xfce\n" > /etc/lightdm/lightdm.conf.d/50-autologin.conf
 
 # 1. 显式指定 openSUSE 的默认显示管理器为 lightdm
 RUN mkdir -p /etc/sysconfig && \
@@ -99,4 +101,5 @@ RUN systemctl set-default graphical.target && \
 
 # 7. 确保 vmtoolsd 服务开机自启
 RUN systemctl enable vmtoolsd.service
+
 
