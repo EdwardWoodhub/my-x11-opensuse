@@ -82,6 +82,9 @@ jobs:
           context: .
           file: ./Containerfile
           push: true
+          # 关键两行：关闭 OCI 1.1 Attestation 元数据，完美兼容阿里云 ACR
+          provenance: false
+          sbom: false
           tags: |
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:${{ steps.vars.outputs.tag }}
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:latest
