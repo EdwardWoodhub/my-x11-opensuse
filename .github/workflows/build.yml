@@ -47,6 +47,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # =========================================================================
+      # 2. 登录阿里云 ACR
+      # =========================================================================
+      - name: Log in to Aliyun ACR
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ALIYUN_ACR_REGISTRY }}
+          username: ${{ secrets.ALIYUN_ACR_USERNAME }}
+          password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+          
       # 动态计算镜像 Tag 与包名（统一转换为小写）
       - name: Compute Image Tag & Version
         id: vars
@@ -62,8 +73,10 @@ jobs:
             echo "tag=commit-${{ github.sha }}" >> $GITHUB_OUTPUT
           fi
 
-      # 步骤 1：构建 OCI 镜像并推送到 GHCR
-      - name: Build and Push OCI Image
+      # =========================================================================
+      # 3. 单次构建并直接并发双推（GHCR + Aliyun ACR）
+      # =========================================================================
+      - name: Build and Push OCI Image to Registries
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -72,7 +85,13 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:${{ steps.vars.outputs.tag }}
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name }}:latest
+            ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ secrets.ALIYUN_ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag }}
+            ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ secrets.ALIYUN_ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
+            
+      
 
+      
+          
       # 步骤 2：打包成 LiveCD ISO
       - name: Generate LiveCD ISO
         run: |
@@ -102,23 +121,3 @@ jobs:
           name: "Build ${{ steps.vars.outputs.tag }}"
           generate_release_notes: true
           
-      
-      # =========================================================================
-      # 同步镜像到阿里云 ACR
-      # =========================================================================
-      - name: Sync OCI Image from GHCR to Aliyun ACR
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
-        run: |
-          echo "Syncing ${{ env.IMAGE_NAME }}:latest to Aliyun ACR..."
-          
-          # 确保 skopeo 已安装（ubuntu-latest 默认已包含）
-          skopeo copy \
-            --all \
-            --src-creds "${{ env.ACTOR_LOWER }}:${{ secrets.GITHUB_TOKEN }}" \
-            --dest-creds "${{ secrets.ALIYUN_ACR_USERNAME }}:${{ secrets.ALIYUN_ACR_PASSWORD }}" \
-            --dest-compress-format gzip \
-            --format v2s2 \
-            docker://${{ env.REGISTRY }}/${{ env.ACTOR_LOWER }}/${{ env.IMAGE_NAME }}:latest \
-            docker://${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ secrets.ALIYUN_ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
-            
-      
