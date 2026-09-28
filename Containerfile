@@ -41,10 +41,12 @@ RUN groupadd -f wheel && \
 RUN echo 'Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"' >> /etc/sudoers
 
 # ------------------------------
-# 4c. 固化 Recovery 分区大小为 8GB
+# 4c. 固化 Recovery (8GB) 与 State (100GB) 分区大小
 # ------------------------------
 RUN mkdir -p /etc/elemental && \
-    printf 'install:\n  partitions:\n    recovery:\n      size: 8192\n' > /etc/elemental/config.yaml
+    printf 'install:\n  snapshotter:\n    type: btrfs\n  partitions:\n    recovery:\n      size: 8192\n    state:\n      size: 102400\n' > /etc/elemental/config.yaml
+
+
 
 # 1. 彻底屏蔽所有云边注册、自杀评估、自动重启以及网络阻断单元
 RUN mkdir -p /etc/systemd/system && \
