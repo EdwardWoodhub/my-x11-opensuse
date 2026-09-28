@@ -100,3 +100,22 @@ jobs:
           generate_release_notes: true
           
       
+      # =========================================================================
+      # 同步镜像到阿里云 ACR
+      # =========================================================================
+      - name: Sync OCI Image from GHCR to Aliyun ACR
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+        run: |
+          echo "Syncing ${{ env.IMAGE_NAME }}:latest to Aliyun ACR..."
+          
+          # 确保 skopeo 已安装（ubuntu-latest 默认已包含）
+          skopeo copy \
+            --all \
+            --src-creds "${{ env.ACTOR_LOWER }}:${{ secrets.GITHUB_TOKEN }}" \
+            --dest-creds "${{ secrets.ALIYUN_ACR_USERNAME }}:${{ secrets.ALIYUN_ACR_PASSWORD }}" \
+            --dest-compress-format gzip \
+            --format v2s2 \
+            docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            docker://${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ secrets.ALIYUN_ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
+            
+      
