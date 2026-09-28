@@ -118,7 +118,7 @@ jobs:
             --dest-creds "${{ secrets.ALIYUN_ACR_USERNAME }}:${{ secrets.ALIYUN_ACR_PASSWORD }}" \
             --dest-compress-format gzip \
             --format v2s2 \
-            docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            docker://${{ env.REGISTRY }}/${{ env.ACTOR_LOWER }}/${{ env.IMAGE_NAME }}:latest \
             docker://${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ secrets.ALIYUN_ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
             
       
