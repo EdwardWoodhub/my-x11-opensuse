@@ -12,8 +12,7 @@ RUN zypper --non-interactive --gpg-auto-import-keys refresh && \
         fastfetch \
         fontconfig \
         gedit \
-        noto-sans-cjk-fonts \
-        noto-serif-cjk-fonts \
+        wqy-microhei-fonts \
         htop \
         lightdm \
         lightdm-gtk-greeter \
