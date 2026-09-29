@@ -10,9 +10,10 @@ RUN zypper --non-interactive --gpg-auto-import-keys refresh && \
     zypper --non-interactive in \
         btop \
         fastfetch \
+        fontconfig \
         gedit \
-        google-noto-sans-cjk-fonts \
-        google-noto-serif-cjk-fonts \
+        noto-sans-cjk-fonts \
+        noto-serif-cjk-fonts \
         htop \
         lightdm \
         lightdm-gtk-greeter \
