@@ -11,6 +11,8 @@ RUN zypper --non-interactive --gpg-auto-import-keys refresh && \
         btop \
         fastfetch \
         gedit \
+        google-noto-sans-cjk-fonts \
+        google-noto-serif-cjk-fonts \
         htop \
         lightdm \
         lightdm-gtk-greeter \
@@ -26,6 +28,7 @@ RUN zypper --non-interactive --gpg-auto-import-keys refresh && \
         xf86-video-vmware \
         xf86-input-vmmouse \
         xfwm4 && \
+    fc-cache -f && \
     zypper clean -a
 
 # ------------------------------
