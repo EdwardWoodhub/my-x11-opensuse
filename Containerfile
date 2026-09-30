@@ -6,7 +6,7 @@ RUN zypper --non-interactive ar -cfp 90 https://download.opensuse.org/distributi
     zypper --non-interactive ar -cfp 90 https://download.opensuse.org/distribution/leap/16.0/repo/non-oss/ non-oss || true && \
     zypper --non-interactive ar -cfp 90 https://download.opensuse.org/repositories/M17N:/fonts/16.0/ M17N-fonts || true 
 
-# 3. 导入 GPG 密钥并安装 XFCE 桌面环境与 LightDM
+# 3. 导入 GPG 密钥并安装 XFCE 桌面环境与 SDDM
 RUN zypper --non-interactive --gpg-auto-import-keys refresh && \
     zypper --non-interactive in \
         btop \
@@ -15,8 +15,7 @@ RUN zypper --non-interactive --gpg-auto-import-keys refresh && \
         gedit \
         wqy-microhei-fonts \
         htop \
-        lightdm \
-        lightdm-gtk-greeter \
+        sddm \
         meld \
         open-vm-tools \
         open-vm-tools-desktop \
@@ -88,19 +87,19 @@ RUN useradd -m -G wheel -s /bin/bash peter && \
     echo 'Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"' >> /etc/sudoers
 
 
-# 5. 配置 LightDM 开机自动免密登录 liveuser 进入 XFCE
-#RUN mkdir -p /etc/lightdm/lightdm.conf.d && \
-#    printf "[Seat:*]\nautologin-user=liveuser\nautologin-user-timeout=0\nuser-session=xfce\n" > /etc/lightdm/lightdm.conf.d/50-autologin.conf
+# 5. 配置 SDDM 开机自动免密登录 liveuser 进入 XFCE
+#RUN mkdir -p /etc/sddm/sddm.conf.d && \
+#    printf "[Seat:*]\nautologin-user=liveuser\nautologin-user-timeout=0\nuser-session=xfce\n" > /etc/sddm/sddm.conf.d/50-autologin.conf
 
-# 1. 显式指定 openSUSE 的默认显示管理器为 lightdm
+# 1. 显式指定 openSUSE 的默认显示管理器为 sddm
 RUN mkdir -p /etc/sysconfig && \
-    echo 'DISPLAYMANAGER="lightdm"' > /etc/sysconfig/displaymanager
+    echo 'DISPLAYMANAGER="sddm"' > /etc/sysconfig/displaymanager
 
 # 2. 强行建立 display-manager 和 graphical.target 软链接
 RUN systemctl set-default graphical.target && \
     mkdir -p /etc/systemd/system/graphical.target.wants && \
-    ln -sf /usr/lib/systemd/system/lightdm.service /etc/systemd/system/display-manager.service && \
-    ln -sf /usr/lib/systemd/system/lightdm.service /etc/systemd/system/graphical.target.wants/lightdm.service
+    ln -sf /usr/lib/systemd/system/sddm.service /etc/systemd/system/display-manager.service && \
+    ln -sf /usr/lib/systemd/system/sddm.service /etc/systemd/system/graphical.target.wants/sddm.service
 
 
 # 7. 确保 vmtoolsd 服务开机自启
