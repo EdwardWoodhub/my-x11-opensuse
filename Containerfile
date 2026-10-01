@@ -13,15 +13,16 @@ RUN zypper --non-interactive --gpg-auto-import-keys refresh && \
         fastfetch \
         fontconfig \
         gedit \
-        wqy-microhei-fonts \
         htop \
-        sddm \
+        konsole \
         meld \
         open-vm-tools \
         open-vm-tools-desktop \
         patterns-xfce-xfce \
         pluma \
+        sddm \
         syncthing \
+        wqy-microhei-fonts \
         xorg-x11-server \
         xfce4-terminal \
         xfce4-session \
